@@ -46,6 +46,27 @@ Third, calculate the distance from one leaf node to another. Last, get the final
  *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
  * };
  */
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+
+/*
+Approach:
+    We can use a standard solution for this question: divide the question into three parts: 1. Find all leaf nodes; 2. Find the lowest common ancestor of 
+two leaf nodes; 3. Calculate their distance. This solution is unacceptable for this question due to the large constraints. So, we can build a directed
+graph to find the shortest path between two leaf nodes.
+*/
+
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <queue>
 
@@ -56,96 +77,84 @@ class Solution
 public:
     int countPairs(TreeNode* root, int distance) 
     {
-        vector<struct TreeNode*> vct {};
-        dfs(root, vct);
-        int result = 0;
-        const int n = vct.size();
-        if (1 == n)
+        if (nullptr == root)
         {
             return 0;
         }
-        for (int i=0; i<n-1; ++i)
+        unordered_map<struct TreeNode*, vector<struct TreeNode*>> _map {};
+        vector<struct TreeNode*> leaves {};
+        dfs(root, _map, leaves);
+        int result = 0;
+        for (int i=0; i<leaves.size(); ++i)
         {
-            struct TreeNode* ancestor = lowestCommonAncestor(root, vct[i], vct[i + 1]);
-            // cout << ancestor->val << endl;
-            int dis = findDistance(ancestor, vct[i], vct[i + 1]);
-            if (dis <= distance)
-            {
-                result += 1;
-            }
-            // cout << vct[i]->val << "," <<vct[i + 1]->val << "->" << dis << endl;
+            bfs(leaves[i], _map, distance, result);
         }
-        return result;
-        
+        return result / 2;
     }
 
 private:
-    // This funtion is to get all the leaf nodes.
-    void dfs(struct TreeNode* root, vector<struct TreeNode*>& vct)
+    // Build a directed graph.
+    void dfs(struct TreeNode* root, unordered_map<struct TreeNode*, vector<struct TreeNode*>>& _map,
+        vector<struct TreeNode*>& leaves
+    )
     {
         if (nullptr == root)
         {
             return;
         }
-        if (root->left == nullptr && root->right == nullptr)
+        dfs(root->left, _map, leaves);
+        if (nullptr == root->left && nullptr == root->right)
         {
-            vct.push_back(root);
+            leaves.push_back(root);
         }
-        dfs(root->left, vct);
-        dfs(root->right, vct);
+        if (nullptr != root->left)
+        {
+            _map[root].push_back(root->left);
+            _map[root->left].push_back(root);
+        }
+        if (nullptr != root->right)
+        {
+            _map[root].push_back(root->right);
+            _map[root->right].push_back(root);
+        }
+        dfs(root->right, _map, leaves);
         return;
     }
 
-    // This function is to get the lowest common ancestor of two leaf nodes.
-    struct TreeNode* lowestCommonAncestor(struct TreeNode* root, struct TreeNode* node1, struct TreeNode* node2)
+    void bfs(struct TreeNode* root, unordered_map<struct TreeNode*, vector<struct TreeNode*>>& _map, int distance, int& result)
     {
-        if (nullptr == root || root == node1 || root == node2)
+        int dis = 0;
+        queue<struct TreeNode*> q {};
+        q.push(root);
+        unordered_set<struct TreeNode*> visited {};
+        while (!q.empty())
         {
-            return root;
+            int n = q.size();
+            while (n --)
+            {
+                struct TreeNode* node = q.front();
+                q.pop();
+                
+                if (visited.find(node) != visited.end())
+                {
+                    continue;
+                }
+                if (root != node && node->left == nullptr && node->right == nullptr)
+                {
+                    result += 1;
+                }
+                visited.insert(node);
+                for (int i=0; i<_map[node].size(); ++i)
+                {
+                    q.push(_map[node][i]);
+                }
+            }
+            dis += 1;
+            if (dis > distance)
+            {
+                return;
+            }
         }
-        struct TreeNode* left = lowestCommonAncestor(root->left, node1, node2);
-        struct TreeNode* right = lowestCommonAncestor(root->right, node1, node2);
-        if (nullptr != left && nullptr != right)
-        {
-            return root;
-        }
-        return left == nullptr ? right : left;
-    }
-
-    // This is an auxilary function, which calcluate he distance from one node to another.
-    int getDistance(struct TreeNode* root, struct TreeNode* node)
-    {
-        if (nullptr == root)
-        {
-            return -1;
-        }
-        if (root == node)
-        {
-            return 0;
-        }
-        int left = getDistance(root->left, node);
-        int right = getDistance(root->right, node);
-        int result = -1;
-        if (left >= 0)
-        {
-            result = left + 1;
-        }
-        else if (right >= 0)
-        {
-            result = right + 1;
-        }
-        return result;
-    }
-
-    // Calculate the distance from the lowest common ancestor
-    int findDistance(struct TreeNode* ancestor, struct TreeNode* node1, struct TreeNode* node2)
-    {
-        int distance1 = getDistance(ancestor, node1);
-        int distance2 = getDistance(ancestor, node2);
-        if (distance1 == -1 || distance2 == -1)
-        {
-            return -1;
-        }
-        return distance1 + distance2;
-    }
+        return;
+    }   
 };
