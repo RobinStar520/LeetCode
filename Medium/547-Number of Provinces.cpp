@@ -34,53 +34,139 @@ Approach:
     This is a graph problem. Use DFS to solve it.
 */
 
+/*
+02/10/23 update:
+    I rewrite the code using an union-find data structure.
+*/
+
+// #include <vector>
+// #include <unordered_map>
+
+// using namespace std;
+
+// class Solution 
+// {
+// public:
+//     int findCircleNum(vector<vector<int>>& isConnected) 
+//     {
+//         unordered_map<int, vector<int>> _map {};
+//         int result = 0;
+//         const int n = isConnected.size();
+//         vector<int> visited(n, 0);
+//         for (int i=0; i<n; ++i)
+//         {
+//             for (int j=0; j<n; ++j)
+//             {
+//                 if (isConnected[i][j] == 1)
+//                 {
+//                     _map[i].push_back(j);
+//                     _map[j].push_back(i);
+//                 }
+//             }
+//         }
+//         for (int i=0; i<n; ++i)
+//         {
+//             if (!visited[i])
+//             {
+//                 result += 1;
+//                 visited[i] = 1;
+//                 dfs(i, _map, visited);
+//             }
+//         }
+//         return result;
+//     }
+
+//     void dfs(int num, unordered_map<int, vector<int>>& _map, vector<int>& visited)
+//     {
+//         for (const auto& i: _map[num])
+//         {
+//             if (!visited[i])
+//             {
+//                 visited[i] = 1;
+//                 dfs(i, _map, visited);
+//             }
+//         }
+//         return;
+//     }
+// };
+
 #include <vector>
-#include <unordered_map>
+#include <unordered_set>
 
 using namespace std;
+
+class UnionFind
+{
+public:
+    explicit UnionFind(int n)
+    {
+        root = vector<int>(n, 0);
+        init();
+    }
+
+    void init()
+    {
+        for (int i=0; i<root.size(); ++i)
+        {
+            root[i] = i;
+        }
+    }
+
+    int find(int a)
+    {
+        return root[a] == a ? a : root[a] = find(root[a]);
+    }
+
+    bool isSame(int a, int b)
+    {
+        a = find(a);
+        b = find(b);
+        return a == b;
+    }
+
+    void join(int a, int b)
+    {
+        a = find(a);
+        b = find(b);
+        if (a == b)
+        {
+            return;
+        }
+        root[b] = a;
+    }
+
+
+private:
+    vector<int> root;
+};
+
 
 class Solution 
 {
 public:
     int findCircleNum(vector<vector<int>>& isConnected) 
     {
-        unordered_map<int, vector<int>> _map {};
-        int result = 0;
-        const int n = isConnected.size();
-        vector<int> visited(n, 0);
-        for (int i=0; i<n; ++i)
+        UnionFind* obj = new UnionFind(isConnected.size());
+        for (int i=0; i<isConnected.size(); ++i)
         {
-            for (int j=0; j<n; ++j)
+            for (int j=0; j<isConnected[i].size(); ++j)
             {
                 if (isConnected[i][j] == 1)
                 {
-                    _map[i].push_back(j);
-                    _map[j].push_back(i);
+                    obj->join(j, i);
                 }
             }
         }
-        for (int i=0; i<n; ++i)
+        int result = 0;
+        for (int i = 0; i < isConnected.size(); ++i)
         {
-            if (!visited[i])
+            // Only increment result when a city is its own root, indicating a new province.
+            if (obj->find(i) == i)
             {
                 result += 1;
-                visited[i] = 1;
-                dfs(i, _map, visited);
             }
         }
+        delete obj;
         return result;
-    }
-
-    void dfs(int num, unordered_map<int, vector<int>>& _map, vector<int>& visited)
-    {
-        for (const auto& i: _map[num])
-        {
-            if (!visited[i])
-            {
-                visited[i] = 1;
-                dfs(i, _map, visited);
-            }
-        }
-        return;
     }
 };

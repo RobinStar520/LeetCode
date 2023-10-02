@@ -39,41 +39,111 @@ Approach:
 A "visited" array can help us to find whether a node can be reached.
 */
 
+/*
+02/10-23 update approach:
+    In this edition approach I use a union-find data structure to increase the procedure speed.
+*/
+
+// #include <vector>
+// #include <unordered_map>
+
+// using namespace std;
+
+// class Solution 
+// {
+// public:
+//     bool validPath(int n, vector<vector<int>>& edges, int source, int destination) 
+//     {
+//         unordered_map<int, vector<int>> _map {};
+//         for (const auto& v: edges)
+//         {
+//             // Note: This is an undirected graph.
+//             _map[v[0]].push_back(v[1]);
+//             _map[v[1]].push_back(v[0]);
+//         }
+//         vector<int> visited(n, 0);
+//         visited[source] = 1;
+//         dfs(source, _map, visited);
+//         // Inspect whether the destination was been visited.
+//         return visited[destination] == 1;
+//     }
+
+// private:
+//     void dfs(int i, unordered_map<int, vector<int>>& _map, vector<int>& visited)
+//     {
+//         for (const auto& num: _map[i])
+//         {
+//             if (!visited[num])
+//             {
+//                 visited[num] = true;
+//                 dfs(num, _map, visited);
+//             }
+//         }
+//         return;
+//     }
+// };
+
 #include <vector>
-#include <unordered_map>
 
 using namespace std;
+
+class UnionFind
+{
+public:
+    explicit UnionFind(int n)
+    {
+        root = vector<int>(n, -1);
+        init();
+    }
+
+    void init()
+    {
+        for (int i=0; i<root.size(); ++i)
+        {
+            root[i] = i;
+        }
+    }
+
+    int find(int a)
+    {
+        return root[a] == a ? a : root[a] = find(root[a]);
+    }
+
+    bool isSame(int a, int b)
+    {
+        a = find(a);
+        b = find(b);
+        return a == b;
+    }
+
+    // combine b to a 
+    void join(int a, int b)
+    {
+        a = find(a);
+        b = find(b);
+        if (a == b)
+        {
+            return;
+        }
+        root[b] = a;
+    }
+
+private:
+    vector<int> root {};
+};
 
 class Solution 
 {
 public:
     bool validPath(int n, vector<vector<int>>& edges, int source, int destination) 
     {
-        unordered_map<int, vector<int>> _map {};
+        UnionFind* obj = new UnionFind(n);
         for (const auto& v: edges)
         {
-            // Note: This is an undirected graph.
-            _map[v[0]].push_back(v[1]);
-            _map[v[1]].push_back(v[0]);
+            obj->join(v[0], v[1]);
         }
-        vector<int> visited(n, 0);
-        visited[source] = 1;
-        dfs(source, _map, visited);
-        // Inspect whether the destination was been visited.
-        return visited[destination] == 1;
-    }
-
-private:
-    void dfs(int i, unordered_map<int, vector<int>>& _map, vector<int>& visited)
-    {
-        for (const auto& num: _map[i])
-        {
-            if (!visited[num])
-            {
-                visited[num] = true;
-                dfs(num, _map, visited);
-            }
-        }
-        return;
+        bool result = obj->isSame(source, destination);
+        delete obj;
+        return result;
     }
 };
