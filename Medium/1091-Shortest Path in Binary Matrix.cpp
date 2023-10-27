@@ -37,9 +37,14 @@ Approach:
 question.
 */
 
+/*
+Modified Log:
+    26/10/23 optimise the solution, which reduces the runtime.
+*/
+
 #include <vector>
-#include <utility>
 #include <queue>
+#include <utility>
 
 using namespace std;
 
@@ -48,50 +53,44 @@ class Solution
 public:
     int shortestPathBinaryMatrix(vector<vector<int>>& grid) 
     {
-        const int n = grid.size();
-        if (grid[0][0] == 1 || grid[n - 1][n - 1] == 1) {
-            return -1; // If the start or end cell is blocked, there is no clear path.
-        }
-
-        vector<vector<int>> directions = {
-            {1, 0}, {-1, 0}, {0, 1}, {0, -1},
-            {1, 1}, {-1, -1}, {1, -1}, {-1, 1}
-        };
-
+        const int m = grid.size();
+        vector<vector<int>> visited(m, vector<int>(m, 0));
         queue<pair<int, int>> q {};
-        q.push(make_pair(0, 0));
-        grid[0][0] = 1; // Mark the start cell as visited.
-        int pathLength = 1;
-
-        while (!q.empty()) 
+        if (grid[0][0] == 1)
         {
-            int qSize = q.size();
-            for (int i = 0; i < qSize; i++) 
+            return -1;
+        }
+        q.push(make_pair(0, 0));
+        visited[0][0] = 1;
+        int result = 1;
+        while (!q.empty())
+        {
+            int n = q.size();
+            while (n --)
             {
-                int x = q.front().first;
-                int y = q.front().second;
+                auto [cur_x, cur_y] = q.front();
                 q.pop();
-
-                if (x == n - 1 && y == n - 1) 
+                if (cur_x == m - 1 && cur_y == m - 1)
                 {
-                    return pathLength; 
+                    return result;
                 }
-
-                for (const auto& dir : directions) 
+                for (int i=0; i<8; ++i)
                 {
-                    int next_x = x + dir[0];
-                    int next_y = y + dir[1];
-
-                    if (next_x >= 0 && next_x < n && next_y >= 0 && next_y < n && grid[next_x][next_y] == 0) 
+                    int next_x = cur_x + dx[i];
+                    int next_y = cur_y + dy[i];
+                    if (next_x >= 0 && next_x < m && next_y >= 0 && next_y < m && !visited[next_x][next_y] && grid[next_x][next_y] == 0)
                     {
                         q.push(make_pair(next_x, next_y));
-                        grid[next_x][next_y] = 1; 
+                        visited[next_x][next_y] = 1;
                     }
                 }
             }
-            pathLength++;
+            result += 1;
         }
-
-        return -1; 
+        return -1;
     }
+
+private:
+    const int dx[8] = {1, 1, 0, -1, -1, -1, 0, 1};
+    const int dy[8] = {0, 1, 1, 1, 0, -1, -1, -1};
 };
