@@ -38,6 +38,11 @@ Approach:
     We can use a BFS or DFS to judge whether we can reach a cell based on the condition.
 */
 
+/*
+Modify Log:
+    28/10/23 Modify some parts of the code but didn't change the whole algorithm(still BFS). 
+*/
+
 #include <vector>
 #include <queue>
 #include <utility>
@@ -49,14 +54,11 @@ class Solution
 public:
     int orangesRotting(vector<vector<int>>& grid) 
     {
-        int count = 0;
-        int result = 0;
         const int m = grid.size();
         const int n = grid[0].size();
-        vector<vector<int>> directions {
-            {0, 1}, {0, -1}, {1, 0}, {-1, 0}
-        };
         queue<pair<int, int>> q {};
+        int count = 0;
+        int result = 0;
         for (int i=0; i<m; ++i)
         {
             for (int j=0; j<n; ++j)
@@ -81,19 +83,22 @@ public:
                 q.pop();
                 for (int i=0; i<4; ++i)
                 {
-                    int X = x + directions[i][0];
-                    int Y = y + directions[i][1];
-                    if (X >= 0 && X < m && Y >= 0 && Y < n && grid[X][Y] == 1)
+                    int next_x = x + dx[i];
+                    int next_y = y + dy[i];
+                    if (next_x >= 0 && next_x < m && next_y >= 0 && next_y < n && grid[next_x][next_y] == 1)
                     {
-                        q.push(make_pair(X, Y));
-                        grid[X][Y] = 2;
+                        q.push(make_pair(next_x, next_y));
+                        grid[next_x][next_y] = 2;
                         count -= 1;
                     }
                 }
             }
             result += 1;
-            
         }
         return count == 0 ? result : -1;
     }
+
+private:
+    const int dx[4] = {0, 0, 1, -1};
+    const int dy[4] = {1, -1, 0, 0};
 };
