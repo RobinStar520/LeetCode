@@ -7,9 +7,15 @@ Approach:
     We can use the BFS for each eall that value is zero simultaneously.
 */
 
+/*
+Modified Log:
+    31/10/23 Modified the BFS code, and now looks more logical.
+*/
+
 #include <vector>
 #include <queue>
 #include <utility>
+#include <algorithm>
 #include <limits>
 
 using namespace std;
@@ -22,41 +28,47 @@ public:
         const int INF = numeric_limits<int>::max();
         const int m = mat.size();
         const int n = mat[0].size();
-        queue<pair<int, int>> q {};
-        vector<vector<int>> directions {
-            {1, 0}, {-1, 0}, {0, 1}, {0, -1}
-        };
+        queue<pair<pair<int, int>, int>> q {};
+        vector<vector<int>> visited(m, vector<int>(n, 0));
         vector<vector<int>> result(m, vector<int>(n, INF));
+        const int dx[4] = {0, 0, 1, -1};
+        const int dy[4] = {-1, 1, 0, 0};
         for (int i=0; i<m; ++i)
         {
             for (int j=0; j<n; ++j)
             {
                 if (mat[i][j] == 0)
                 {
-                    result[i][j] = 0;
-                    q.push(make_pair(i, j));
+                    q.push(make_pair(make_pair(i, j), 0));
+                    visited[i][j] = 1;
                 }
             }
         }
 
         while (!q.empty())
         {
-            auto [x, y] = q.front();
-            q.pop();
-            for (int i=0; i<4; ++i)
+            int size = q.size();
+            while (size --)
             {
-                int X = x + directions[i][0];
-                int Y = y + directions[i][1];
-                if (X >= 0 && Y >= 0 && X < m && Y < n)
+                auto [coordinate, level] = q.front();
+                q.pop();
+                auto [x, y] = coordinate;
+                result[x][y] = std::min(result[x][y], level);
+                for (int i=0; i<4; ++i)
                 {
-                    if (result[X][Y] > result[x][y] + 1)
+                    int X = x + dx[i];
+                    int Y = y + dy[i];
+                    if (X >= 0 && X < m && Y >= 0 && Y < n && !visited[X][Y])
                     {
-                        result[X][Y] = result[x][y] + 1;
-                        q.push(make_pair(X, Y));
+                        visited[X][Y] = 1;
+                        q.push(make_pair(make_pair(X, Y), level + 1));
+                        result[X][Y] = level + 1;
                     }
                 }
             }
         }
+
         return result;
     }
+
 };
